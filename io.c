@@ -21,6 +21,7 @@ int main(void) {
 
     FILE *fp;
     size_t count = 0;
+    char header[256];
 
     // Opens file in program root
     fp = fopen("power_quality_log.csv", "r");
@@ -31,8 +32,14 @@ int main(void) {
         return 1;
     }
 
-    // Currently only handles numeric-only CSV (no heading support yet)
-    // To be resolved with the original, unedited file correctly being handled as program input
+    // Read and discard the header line
+    if (fgets(header, sizeof(header), fp) == NULL) {
+        printf("Error reading header.\n");
+        fclose(fp);
+        return 1;
+    }
+
+    // Read data from file
     while (fscanf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
         &data[count].time,
         &data[count].v_phA,
@@ -42,7 +49,10 @@ int main(void) {
         &data[count].frequency,
         &data[count].power_factor,
         &data[count].thd_percent) == 8) {
-        count ++;
+        if (++count >= SAMPLES) {
+            printf("Maximum number of samples (%d) reached.", SAMPLES);
+            break;
+        }
         }
 
     // Print values to screen to verify data has been read successfully
@@ -62,5 +72,5 @@ int main(void) {
 
     printf("Number of lines read: %zu", count);
 
-    return 0; // Success
+    return 0;
 }
