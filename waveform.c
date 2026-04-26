@@ -1,8 +1,10 @@
-#include <stdio.h>
 #include <math.h>
 #include <float.h>
 #include "waveform.h"
 #include "io.h"
+
+// Hard limit of sensor - voltage samples above this value will be flagged as clipped
+#define CLIP_LIMIT 324.9
 
 void compute_rms(double *rms_A, double *rms_B, double *rms_C) {
 
@@ -41,6 +43,33 @@ void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
         *p2p_C = max_C - min_C;
 }
 
-// int compute_dco(){}
-// int detect_clipping(){}
-// int check_tolerance(){}
+// TODO: add validation to avoid dividing by zero
+// TODO: handle floating-point rounding
+void compute_dc_offset(double *mean_A, double *mean_B, double *mean_C) {
+
+    int i = 0;
+    double sum_A = 0, sum_B = 0, sum_C = 0;
+
+    for (i = 0; i < SAMPLES; i++) {
+        sum_A += data[i].v_phA;
+        sum_B += data[i].v_phB;
+        sum_C += data[i].v_phC;
+    }
+
+    *mean_A = sum_A/SAMPLES;
+    *mean_B = sum_B/SAMPLES;
+    *mean_C = sum_C/SAMPLES;
+}
+
+void detect_clipping() {
+    int i = 0;
+
+    for (i = 0; i < SAMPLES; i++) {
+        if (data[i].v_phA > CLIP_LIMIT){
+            data[i].health_flags |= CLIP_A;}
+        if (data[i].v_phB > CLIP_LIMIT){
+            data[i].health_flags |= CLIP_B;}
+        if (data[i].v_phC > CLIP_LIMIT){
+            data[i].health_flags |= CLIP_C;}
+    }
+}

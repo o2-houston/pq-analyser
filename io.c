@@ -6,8 +6,6 @@
 WaveformSample_t *data = NULL;
 
 int load_data(void) {
-
-    FILE *fp;
     size_t count = 0;
     char header[256];
 
@@ -18,7 +16,7 @@ int load_data(void) {
     }
 
     // Opens file in program root
-    fp = fopen("power_quality_log.csv", "r");
+    FILE *fp = fopen("power_quality_log.csv", "r");
 
     // Validate input
     if (fp == NULL) {
@@ -60,12 +58,28 @@ void free_data(void) {
     free(data);  // Free dynamically allocated memory
 }
 
-// Test function to verify output of function compute_rms
+void report_clipping() {
+    int i = 0;
+
+    for (i = 0; i < SAMPLES; i++) {
+        if (data[i].health_flags & CLIP_A) {
+            printf("\nClipping detected in phase A at %lf seconds.", data[i].time);
+        }
+        if (data[i].health_flags & CLIP_B) {
+            printf("\nClipping detected in phase B at %lf seconds.", data[i].time);
+        }
+        if (data[i].health_flags & CLIP_C) {
+            printf("\nClipping detected in phase C at %lf seconds.", data[i].time);
+        }
+    }
+}
+
+/* Test function to verify output of function compute_rms
 int print_rms(double *rms_A, double *rms_B, double *rms_C) {
     printf("\nRMS for A: %lf", *rms_A);
     printf("\nRMS for B: %lf", *rms_B);
     printf("\nRMS for C: %lf", *rms_C);
-}
+} */
 
 /* Test function to verify output of function compute_p2p
 int print_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
@@ -74,3 +88,10 @@ int print_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
     printf("\nPeak-to-peak voltage for C: %lf", *p2p_C);
     return 0;
 } */
+
+// Test function to verify output of function compute_dc_offset
+void print_dc_offset(double *mean_A, double *mean_B, double *mean_C) {
+    printf("\nDC offset for A: %lf", *mean_A);
+    printf("\nDC offset for B: %lf", *mean_B);
+    printf("\nDC offset for C: %lf", *mean_C);
+}
