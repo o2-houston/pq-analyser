@@ -12,7 +12,7 @@ typedef struct {
     double thd_percent;
 } WaveformSample_t;
 
-// int compute_rms();
+void compute_rms(double *rms_A, double *rms_B, double *rms_C);
 void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C);
 // int compute_dco();
 // int detect_clipping();

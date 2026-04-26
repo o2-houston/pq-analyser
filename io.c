@@ -60,10 +60,17 @@ void free_data(void) {
     free(data);  // Free dynamically allocated memory
 }
 
-// Test function to verify output of function compute_p2p
+// Test function to verify output of function compute_rms
+int print_rms(double *rms_A, double *rms_B, double *rms_C) {
+    printf("\nRMS for A: %lf", *rms_A);
+    printf("\nRMS for B: %lf", *rms_B);
+    printf("\nRMS for C: %lf", *rms_C);
+}
+
+/* Test function to verify output of function compute_p2p
 int print_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
     printf("\nPeak-to-peak voltage for A: %lf", *p2p_A);
     printf("\nPeak-to-peak voltage for B: %lf", *p2p_B);
     printf("\nPeak-to-peak voltage for C: %lf", *p2p_C);
     return 0;
-}
+} */

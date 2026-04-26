@@ -4,8 +4,21 @@
 #include "waveform.h"
 #include "io.h"
 
-//int compute_rms() {}
-    // Phase A
+void compute_rms(double *rms_A, double *rms_B, double *rms_C) {
+
+    int i = 0;
+    double sqsum_A = 0,  sqsum_B = 0, sqsum_C = 0;
+
+    for (i=0; i < SAMPLES; i++) {
+        sqsum_A += pow(data[i].v_phA, 2);
+        sqsum_B += pow(data[i].v_phB, 2);
+        sqsum_C += pow(data[i].v_phC, 2);
+    }
+
+    *rms_A = sqrt(sqsum_A/SAMPLES);
+    *rms_B = sqrt(sqsum_B/SAMPLES);
+    *rms_C = sqrt(sqsum_C/SAMPLES);
+}
 
 void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
 
@@ -27,6 +40,7 @@ void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
         *p2p_B = max_B - min_B;
         *p2p_C = max_C - min_C;
 }
+
 // int compute_dco(){}
 // int detect_clipping(){}
 // int check_tolerance(){}
