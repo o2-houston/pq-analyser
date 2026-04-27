@@ -99,9 +99,9 @@ void print_dc_offset(double *mean_A, double *mean_B, double *mean_C) {
     printf("\nDC offset for C: %lf", *mean_C);
 } */
 
-// Test function to verify output of function check_rms_tolerance
+/* Test function to verify output of function check_rms_tolerance
 void print_tolerance_status(double* tolerance_status) {
     printf("\nTolerance status of A: %d", tolerance_status[0]);
     printf("\nTolerance status of B: %d", tolerance_status[1]);
     printf("\nTolerance status of C: %d", tolerance_status[2]);
-}
+} */

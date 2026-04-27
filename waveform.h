@@ -29,5 +29,6 @@ void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C);
 void compute_dc_offset(double *mean_A, double *mean_B, double *mean_C);
 void detect_clipping();
 void check_rms_tolerance(double *tolerance_status, int index, double* rms_value);
+void compute_variance_std_dev(double *var_A, double *var_B, double *var_C, double *stddev_A, double *stddev_B, double *stddev_C);
 
 #endif //PQ_ANALYSER_WAVEFORM_H

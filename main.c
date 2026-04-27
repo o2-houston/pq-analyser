@@ -15,7 +15,6 @@ int main(void) {
 
     double mean_A, mean_B, mean_C;
     compute_dc_offset(&mean_A, &mean_B, &mean_C);
-    print_dc_offset(&mean_A, &mean_B, &mean_C);
 
     detect_clipping();
     report_clipping();
@@ -24,7 +23,10 @@ int main(void) {
     check_rms_tolerance(tolerance_status, 0, &rms_A);
     check_rms_tolerance(tolerance_status, 1, &rms_B);
     check_rms_tolerance(tolerance_status, 2, &rms_C);
-    print_tolerance_status(tolerance_status);
+
+    double var_A, var_B, var_C;
+    double stddev_A, stddev_B, stddev_C;
+    compute_variance_std_dev(&var_A, &var_B, &var_C, &stddev_A, &stddev_B, &stddev_C);
 
     return 0;
 }

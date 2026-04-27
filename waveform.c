@@ -13,17 +13,17 @@
 void compute_rms(double *rms_A, double *rms_B, double *rms_C) {
 
     int i = 0;
-    double sqsum_A = 0,  sqsum_B = 0, sqsum_C = 0;
+    double sum_sq_A = 0,  sum_sq_B = 0, sum_sq_C = 0;
 
     for (i=0; i < SAMPLES; i++) {
-        sqsum_A += pow(data[i].v_phA, 2);
-        sqsum_B += pow(data[i].v_phB, 2);
-        sqsum_C += pow(data[i].v_phC, 2);
+        sum_sq_A += pow(data[i].v_phA, 2);
+        sum_sq_B += pow(data[i].v_phB, 2);
+        sum_sq_C += pow(data[i].v_phC, 2);
     }
 
-    *rms_A = sqrt(sqsum_A/SAMPLES);
-    *rms_B = sqrt(sqsum_B/SAMPLES);
-    *rms_C = sqrt(sqsum_C/SAMPLES);
+    *rms_A = sqrt(sum_sq_A/SAMPLES);
+    *rms_B = sqrt(sum_sq_B/SAMPLES);
+    *rms_C = sqrt(sum_sq_C/SAMPLES);
 }
 
 // TODO: Add data validation,
@@ -88,4 +88,37 @@ void check_rms_tolerance(double* tolerance_status, int index, double* rms_value)
         tolerance_status[index] = -1; // Below tolerance threshold
     }
     else tolerance_status[index] = 0; // Within tolerance
+}
+
+// TODO: write test function
+void compute_variance_std_dev(double *var_A, double *var_B, double *var_C, double *stddev_A, double *stddev_B, double *stddev_C) {
+
+    int i = 0;
+    double sum_A = 0, sum_B = 0, sum_C = 0;
+
+    for (i = 0; i < SAMPLES; i++) {
+        sum_A += data[i].v_phA;
+        sum_B += data[i].v_phB;
+        sum_C += data[i].v_phC;
+    }
+
+    double mean_A = sum_A/SAMPLES;
+    double mean_B = sum_B/SAMPLES;
+    double mean_C = sum_C/SAMPLES;
+
+    double sum_sq_diff_A = 0, sum_sq_diff_B = 0, sum_sq_diff_C = 0;
+
+    for (i = 0; i < SAMPLES; i++) {
+        sum_sq_diff_A += pow(data[i].v_phA - mean_A, 2);
+        sum_sq_diff_B += pow(data[i].v_phB - mean_B, 2);
+        sum_sq_diff_C += pow(data[i].v_phC - mean_C, 2);
+    }
+
+    *var_A = sum_sq_diff_A/SAMPLES;
+    *var_B = sum_sq_diff_B/SAMPLES;
+    *var_C = sum_sq_diff_C/SAMPLES;
+
+    *stddev_A = sqrt(*var_A);
+    *stddev_B = sqrt(*var_B);
+    *stddev_C = sqrt(*var_C);
 }
