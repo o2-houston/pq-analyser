@@ -31,6 +31,7 @@ int load_data(void) {
         return 1;
     }
 
+    // TODO: handle cases where fscanf does not return 8
     // Read data from file
     while (fscanf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
         &data[count].time,
@@ -54,8 +55,10 @@ int load_data(void) {
     return 0;
 }
 
+// TODO: Check pointer clearance is functional
 void free_data(void) {
     free(data);  // Free dynamically allocated memory
+    data = NULL;
 }
 
 void report_clipping() {
@@ -89,9 +92,16 @@ int print_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
     return 0;
 } */
 
-// Test function to verify output of function compute_dc_offset
+/* Test function to verify output of function compute_dc_offset
 void print_dc_offset(double *mean_A, double *mean_B, double *mean_C) {
     printf("\nDC offset for A: %lf", *mean_A);
     printf("\nDC offset for B: %lf", *mean_B);
     printf("\nDC offset for C: %lf", *mean_C);
+} */
+
+// Test function to verify output of function check_rms_tolerance
+void print_tolerance_status(double* tolerance_status) {
+    printf("\nTolerance status of A: %d", tolerance_status[0]);
+    printf("\nTolerance status of B: %d", tolerance_status[1]);
+    printf("\nTolerance status of C: %d", tolerance_status[2]);
 }

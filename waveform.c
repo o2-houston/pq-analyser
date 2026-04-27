@@ -6,6 +6,10 @@
 // Hard limit of sensor - voltage samples above this value will be flagged as clipped
 #define CLIP_LIMIT 324.9
 
+// Parameters for tolerance check
+#define TOL_LIMIT_UPPER 253
+#define TOL_LIMIT_LOWER 207
+
 void compute_rms(double *rms_A, double *rms_B, double *rms_C) {
 
     int i = 0;
@@ -22,6 +26,7 @@ void compute_rms(double *rms_A, double *rms_B, double *rms_C) {
     *rms_C = sqrt(sqsum_C/SAMPLES);
 }
 
+// TODO: Add data validation,
 void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
 
     int i = 0;
@@ -72,4 +77,15 @@ void detect_clipping() {
         if (data[i].v_phC > CLIP_LIMIT){
             data[i].health_flags |= CLIP_C;}
     }
+}
+
+void check_rms_tolerance(double* tolerance_status, int index, double* rms_value) {
+
+    if (*rms_value > TOL_LIMIT_UPPER) {
+        tolerance_status[index] = 1; // Above tolerance threshold
+    }
+    else if (*rms_value < TOL_LIMIT_LOWER) {
+        tolerance_status[index] = -1; // Below tolerance threshold
+    }
+    else tolerance_status[index] = 0; // Within tolerance
 }
