@@ -26,7 +26,7 @@ void compute_rms(double *rms_A, double *rms_B, double *rms_C) {
     *rms_C = sqrt(sum_sq_C/SAMPLES);
 }
 
-// TODO: Add data validation,
+// TODO: Add data validation
 void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
 
     int i = 0;
@@ -79,7 +79,7 @@ void detect_clipping() {
     }
 }
 
-void check_rms_tolerance(double* tolerance_status, int index, double* rms_value) {
+void check_rms_tolerance(int* tolerance_status, int index, double* rms_value) {
 
     if (*rms_value > TOL_LIMIT_UPPER) {
         tolerance_status[index] = 1; // Above tolerance threshold
@@ -114,9 +114,9 @@ void compute_variance_std_dev(double *var_A, double *var_B, double *var_C, doubl
         sum_sq_diff_C += pow(data[i].v_phC - mean_C, 2);
     }
 
-    *var_A = sum_sq_diff_A/SAMPLES;
-    *var_B = sum_sq_diff_B/SAMPLES;
-    *var_C = sum_sq_diff_C/SAMPLES;
+    *var_A = sum_sq_diff_A/(SAMPLES - 1);
+    *var_B = sum_sq_diff_B/(SAMPLES - 1);
+    *var_C = sum_sq_diff_C/(SAMPLES - 1);
 
     *stddev_A = sqrt(*var_A);
     *stddev_B = sqrt(*var_B);
