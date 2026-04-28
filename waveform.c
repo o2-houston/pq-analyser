@@ -10,7 +10,7 @@
 #define TOL_LIMIT_UPPER 253
 #define TOL_LIMIT_LOWER 207
 
-void compute_rms(double *rms_A, double *rms_B, double *rms_C) {
+void compute_rms(WaveformAnalysis_t *analysis) {
 
     int i = 0;
     double sum_sq_A = 0,  sum_sq_B = 0, sum_sq_C = 0;
@@ -21,13 +21,13 @@ void compute_rms(double *rms_A, double *rms_B, double *rms_C) {
         sum_sq_C += pow(data[i].v_phC, 2);
     }
 
-    *rms_A = sqrt(sum_sq_A/SAMPLES);
-    *rms_B = sqrt(sum_sq_B/SAMPLES);
-    *rms_C = sqrt(sum_sq_C/SAMPLES);
+    analysis->rms[0] = sqrt(sum_sq_A/SAMPLES);
+    analysis->rms[1] = sqrt(sum_sq_B/SAMPLES);
+    analysis->rms[2] = sqrt(sum_sq_C/SAMPLES);
 }
 
 // TODO: Add data validation
-void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
+void compute_p2p(WaveformAnalysis_t *analysis) {
 
     int i = 0;
     double min_A = DBL_MAX, max_A = -DBL_MAX;
@@ -42,15 +42,14 @@ void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C) {
         if (data[i].v_phC < min_C) min_C = data[i].v_phC;
         if (data[i].v_phC > max_C) max_C = data[i].v_phC;
     }
-
-        *p2p_A = max_A - min_A;
-        *p2p_B = max_B - min_B;
-        *p2p_C = max_C - min_C;
+        analysis->p2p[0] = max_A - min_A;
+        analysis->p2p[1] = max_B - min_B;
+        analysis->p2p[2] = max_C - min_C;
 }
 
 // TODO: add validation to avoid dividing by zero
 // TODO: handle floating-point rounding
-void compute_dc_offset(double *mean_A, double *mean_B, double *mean_C) {
+void compute_dc_offset(WaveformAnalysis_t *analysis) {
 
     int i = 0;
     double sum_A = 0, sum_B = 0, sum_C = 0;
@@ -61,37 +60,36 @@ void compute_dc_offset(double *mean_A, double *mean_B, double *mean_C) {
         sum_C += data[i].v_phC;
     }
 
-    *mean_A = sum_A/SAMPLES;
-    *mean_B = sum_B/SAMPLES;
-    *mean_C = sum_C/SAMPLES;
+    analysis->mean[0] = sum_A/SAMPLES;
+    analysis->mean[1] = sum_B/SAMPLES;
+    analysis->mean[2] = sum_C/SAMPLES;
 }
 
 void detect_clipping() {
     int i = 0;
 
     for (i = 0; i < SAMPLES; i++) {
-        if (data[i].v_phA > CLIP_LIMIT){
+        if (fabs(data[i].v_phA) > CLIP_LIMIT){
             data[i].health_flags |= CLIP_A;}
-        if (data[i].v_phB > CLIP_LIMIT){
+        if (fabs(data[i].v_phB) > CLIP_LIMIT){
             data[i].health_flags |= CLIP_B;}
-        if (data[i].v_phC > CLIP_LIMIT){
+        if (fabs(data[i].v_phC) > CLIP_LIMIT){
             data[i].health_flags |= CLIP_C;}
     }
 }
 
-void check_rms_tolerance(int* tolerance_status, int index, double* rms_value) {
+void check_rms_tolerance(WaveformAnalysis_t *analysis, int index) {
 
-    if (*rms_value > TOL_LIMIT_UPPER) {
-        tolerance_status[index] = 1; // Above tolerance threshold
+    if (analysis->rms[index] > TOL_LIMIT_UPPER) {
+        analysis->tolerance_status[index] = 1; // Above tolerance threshold
     }
-    else if (*rms_value < TOL_LIMIT_LOWER) {
-        tolerance_status[index] = -1; // Below tolerance threshold
+    else if (analysis->rms[index] < TOL_LIMIT_LOWER) {
+        analysis->tolerance_status[index] = -1; // Below tolerance threshold
     }
-    else tolerance_status[index] = 0; // Within tolerance
+    else analysis->tolerance_status[index] = 0; // Within tolerance
 }
 
-// TODO: write test function
-void compute_variance_std_dev(double *var_A, double *var_B, double *var_C, double *stddev_A, double *stddev_B, double *stddev_C) {
+void compute_variance_std_dev(WaveformAnalysis_t *analysis) {
 
     int i = 0;
     double sum_A = 0, sum_B = 0, sum_C = 0;
@@ -114,11 +112,11 @@ void compute_variance_std_dev(double *var_A, double *var_B, double *var_C, doubl
         sum_sq_diff_C += pow(data[i].v_phC - mean_C, 2);
     }
 
-    *var_A = sum_sq_diff_A/(SAMPLES - 1);
-    *var_B = sum_sq_diff_B/(SAMPLES - 1);
-    *var_C = sum_sq_diff_C/(SAMPLES - 1);
+    analysis->variance[0] = sum_sq_diff_A/(SAMPLES - 1);
+    analysis->variance[1] = sum_sq_diff_B/(SAMPLES - 1);
+    analysis->variance[2] = sum_sq_diff_C/(SAMPLES - 1);
 
-    *stddev_A = sqrt(*var_A);
-    *stddev_B = sqrt(*var_B);
-    *stddev_C = sqrt(*var_C);
+    analysis->std_dev[0] = sqrt(analysis->variance[0]);
+    analysis->std_dev[1] = sqrt(analysis->variance[1]);
+    analysis->std_dev[2] = sqrt(analysis->variance[2]);
 }

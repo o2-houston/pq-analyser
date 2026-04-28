@@ -24,11 +24,20 @@ typedef struct {
 #define RESERVED_6 (1 << 6)
 #define RESERVED_7 (1 << 7)
 
-void compute_rms(double *rms_A, double *rms_B, double *rms_C);
-void compute_p2p(double *p2p_A, double *p2p_B, double *p2p_C);
-void compute_dc_offset(double *mean_A, double *mean_B, double *mean_C);
+typedef struct {
+    double rms[3];
+    double p2p[3];
+    double mean[3];
+    int tolerance_status[3];
+    double variance[3];
+    double std_dev[3];
+} WaveformAnalysis_t;
+
+void compute_rms(WaveformAnalysis_t *analysis);
+void compute_p2p(WaveformAnalysis_t *analysis);
+void compute_dc_offset(WaveformAnalysis_t *analysis);
 void detect_clipping();
-void check_rms_tolerance(int *tolerance_status, int index, double* rms_value);
-void compute_variance_std_dev(double *var_A, double *var_B, double *var_C, double *stddev_A, double *stddev_B, double *stddev_C);
+void check_rms_tolerance(WaveformAnalysis_t *analysis, int index);
+void compute_variance_std_dev(WaveformAnalysis_t *analysis);
 
 #endif //PQ_ANALYSER_WAVEFORM_H
