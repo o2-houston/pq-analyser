@@ -14,6 +14,14 @@ typedef struct {
     uint8_t health_flags;
 } WaveformSample_t;
 
+typedef enum {
+    TIME = 0,
+    LINE_CURRENT = 1,
+    FREQUENCY = 2,
+    POWER_FACTOR = 3,
+    THD_PERCENT = 4
+} MetricType;
+
 // Define bit positions for health flags
 #define CLIP_A (1 << 0)
 #define CLIP_B (1 << 1)
@@ -31,6 +39,14 @@ typedef struct {
     int tolerance_status[3];
     double variance[3];
     double std_dev[3];
+
+    // Range array identifiers:
+    // 0 = Low, 1 = High, 2 = Range/Difference
+    double range_time[3];
+    double range_line_current[3];
+    double range_freq[3];
+    double range_power_factor[3];
+    double range_thd[3];
 } WaveformAnalysis_t;
 
 void compute_rms(WaveformAnalysis_t *analysis);
@@ -38,6 +54,7 @@ void compute_p2p(WaveformAnalysis_t *analysis);
 void compute_dc_offset(WaveformAnalysis_t *analysis);
 void detect_clipping();
 void check_rms_tolerance(WaveformAnalysis_t *analysis, int index);
+void compute_range(WaveformAnalysis_t *analysis, MetricType metric);
 void compute_variance_std_dev(WaveformAnalysis_t *analysis);
 
 #endif //PQ_ANALYSER_WAVEFORM_H
