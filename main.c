@@ -4,8 +4,8 @@
 int main(void) {
 
     // TODO: Validate successful function of load_data before continuing program run
-    load_data();
-    verify_input_status(load_data());
+    int status = load_data();
+    verify_input_status(status);
 
     WaveformAnalysis_t analysis;
 
@@ -23,9 +23,14 @@ int main(void) {
     compute_range(&analysis, LINE_CURRENT);
     compute_range(&analysis, FREQUENCY);
     compute_range(&analysis, POWER_FACTOR);
-    compute_range(&analysis, THD_PERCENT);;
+    compute_range(&analysis, THD_PERCENT);
+
+    SortedData_t *sorted_data = allocate_sort_memory();
+    sort_samples(sorted_data);
 
     file_output(&analysis);
+    output_sort(*sorted_data);
+
     free_data();
 
     return 0;

@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <float.h>
 #include "waveform.h"
@@ -169,4 +171,72 @@ void compute_variance_std_dev(WaveformAnalysis_t *analysis) {
     analysis->std_dev[0] = sqrt(analysis->variance[0]);
     analysis->std_dev[1] = sqrt(analysis->variance[1]);
     analysis->std_dev[2] = sqrt(analysis->variance[2]);
+}
+
+SortedData_t* allocate_sort_memory() {
+
+    SortedData_t* sorted_data = malloc(sizeof(SortedData_t));
+
+    if (!sorted_data) {
+        printf("Memory allocation failed for sorted_data.\n");
+        return NULL;
+    }
+
+    sorted_data->phA = malloc(sample_count * sizeof(WaveformSample_t));
+    sorted_data->phB = malloc(sample_count * sizeof(WaveformSample_t));
+    sorted_data->phC = malloc(sample_count * sizeof(WaveformSample_t));
+
+    if (!sorted_data->phA || !sorted_data->phB || !sorted_data->phC) {
+        free(sorted_data->phA);
+        free(sorted_data->phB);
+        free(sorted_data->phC);
+        free(sorted_data);
+        printf("Memory allocation failed for sorted arrays.\n");
+        return NULL;
+    }
+
+    sort_samples(sorted_data);
+
+    return sorted_data;
+}
+
+void sort_samples(SortedData_t* sorted_data) {
+
+    if (!sorted_data || !sorted_data->phA || !sorted_data->phB || !sorted_data->phC) {
+        printf("Error: sorted_data or its arrays are NULL.\n");
+        return;
+    }
+
+    memcpy(sorted_data->phA, data, sample_count * sizeof(WaveformSample_t));
+    memcpy(sorted_data->phB, data, sample_count * sizeof(WaveformSample_t));
+    memcpy(sorted_data->phC, data, sample_count * sizeof(WaveformSample_t));
+
+    for (int i = 1; i < sample_count; i++) {
+        WaveformSample_t temp_phA = sorted_data->phA[i];
+        WaveformSample_t temp_phB = sorted_data->phB[i];
+        WaveformSample_t temp_phC = sorted_data->phC[i];
+        int A = i - 1;
+        int B = i - 1;
+        int C = i - 1;
+
+        while (A >= 0 && sorted_data->phA[A].v_phA > temp_phA.v_phA) {
+            sorted_data->phA[A + 1] = sorted_data->phA[A];
+            A--;
+        }
+
+        while (B >= 0 && sorted_data->phB[B].v_phB > temp_phB.v_phB) {
+            sorted_data->phB[B + 1] = sorted_data->phB[B];
+            B--;
+        }
+
+        while (C >= 0 && sorted_data->phC[C].v_phC > temp_phC.v_phC) {
+            sorted_data->phC[C + 1] = sorted_data->phC[C];
+            C--;
+        }
+
+        sorted_data->phA[A + 1] = temp_phA;
+        sorted_data->phB[B + 1] = temp_phB;
+        sorted_data->phC[C + 1] = temp_phC;
+
+    }
 }

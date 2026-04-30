@@ -79,7 +79,6 @@ int load_data(void) {
     if (count == 0) {
         printf("No valid samples found.\n");
         status =  5; // Parsing failure
-        goto cleanup;
     }
 
     cleanup:
@@ -100,7 +99,7 @@ void free_data(void) {
 
 int verify_input_status(int status) {
 
-    if (load_data() != 0) {
+    if (status != 0) {
         printf("Function load_data failed with status code: %d.", status);
         exit(status);
     }
@@ -236,6 +235,45 @@ int file_output(const WaveformAnalysis_t *analysis) {
     else fprintf(fp, "No clipping detected in phase C.\n");
 
     fclose(fp);
+
+    return 0;
+}
+
+int output_sort(SortedData_t sorted_data){
+
+    FILE *fpA = fopen("sort_phA.csv", "w");
+    FILE *fpB = fopen("sort_phB.csv", "w");
+    FILE *fpC = fopen("sort_phC.csv", "w");
+
+    fprintf(fpA, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
+    fprintf(fpB, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
+    fprintf(fpC, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
+
+
+    for (int i = 0; i < sample_count; i++) {
+        fprintf(fpA, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
+                sorted_data.phA[i].time, sorted_data.phA[i].v_phA, sorted_data.phA[i].v_phB, sorted_data.phA[i].v_phC,
+                sorted_data.phA[i].line_current, sorted_data.phA[i].frequency, sorted_data.phA[i].power_factor,
+                sorted_data.phA[i].thd_percent, sorted_data.phA[i].health_flags);
+
+        fprintf(fpB, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
+                sorted_data.phB[i].time, sorted_data.phB[i].v_phA, sorted_data.phB[i].v_phB, sorted_data.phB[i].v_phC,
+                sorted_data.phB[i].line_current, sorted_data.phB[i].frequency, sorted_data.phB[i].power_factor,
+                sorted_data.phB[i].thd_percent, sorted_data.phB[i].health_flags);
+
+        fprintf(fpC, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
+                sorted_data.phC[i].time, sorted_data.phC[i].v_phA, sorted_data.phC[i].v_phB, sorted_data.phC[i].v_phC,
+                sorted_data.phC[i].line_current, sorted_data.phC[i].frequency, sorted_data.phC[i].power_factor,
+                sorted_data.phC[i].thd_percent, sorted_data.phC[i].health_flags);
+    }
+
+    fclose(fpA);
+    fclose(fpB);
+    fclose(fpC);
+
+    free(sorted_data.phA);
+    free(sorted_data.phB);
+    free(sorted_data.phC);
 
     return 0;
 }

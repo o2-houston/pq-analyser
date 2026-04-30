@@ -49,6 +49,12 @@ typedef struct {
     double range_thd[3];
 } WaveformAnalysis_t;
 
+typedef struct {
+    WaveformSample_t* phA;
+    WaveformSample_t* phB;
+    WaveformSample_t* phC;
+} SortedData_t;
+
 void compute_rms(WaveformAnalysis_t *analysis);
 void compute_p2p(WaveformAnalysis_t *analysis);
 void compute_dc_offset(WaveformAnalysis_t *analysis);
@@ -56,5 +62,7 @@ void detect_clipping();
 void check_rms_tolerance(WaveformAnalysis_t *analysis, int index);
 void compute_range(WaveformAnalysis_t *analysis, MetricType metric);
 void compute_variance_std_dev(WaveformAnalysis_t *analysis);
+SortedData_t* allocate_sort_memory();
+void sort_samples(SortedData_t* sorted_data);
 
 #endif //PQ_ANALYSER_WAVEFORM_H
