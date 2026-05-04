@@ -23,7 +23,7 @@ Separate CSV files for each phase (A, B, C) sorted by voltage magnitude for the 
 1. Clone the repository
 ```
 git clone https://github.com/o2-houston/pq-analyzer.git
-cd PQAnalyzer
+cd pq-analyzer
 ```
 
 2. Create the build directory:
