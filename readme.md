@@ -7,7 +7,7 @@ Made using CLion in C99, CMake v4.1.
 
 ========== Using the Program ==========
 
-The input CSV file should be placed in the root directory of the project. The program explicitly seeks the name "power_quality_log.csv".
+The input CSV file should be placed in the same directory as the executable. The program explicitly seeks the name "power_quality_log.csv".
 
 ========== Program Outputs ==========
 
@@ -20,10 +20,11 @@ Separate CSV files for each phase (A, B, C) sorted by voltage magnitude for the 
 
 ========== Building the Project ==========
 
+Follow these instructions in developer powershell or equivalent:
 1. Clone the repository
 ```
-git clone https://github.com/o2-houston/pq-analyzer.git
-cd pq-analyzer
+git clone https://github.com/o2-houston/pq-analyser.git
+cd pq-analyser
 ```
 
 2. Create the build directory:
@@ -34,4 +35,6 @@ cd build
 
 3. Generate the build files with CMake:```cmake ..```
 4. Compile the program: ```make```
-
+5. If the executable is not yet generated, enter: ```msbuild pq_analyser.slnx /p:Configuration=Release```
+  
+Note: Don't forget to place the datafile into the same directory as the executable with the filename "power_quality_log.csv"
