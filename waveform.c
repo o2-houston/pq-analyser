@@ -18,18 +18,19 @@ void compute_rms(WaveformAnalysis_t *analysis) {
     int i = 0;
     double sum_sq_A = 0,  sum_sq_B = 0, sum_sq_C = 0;
 
+    // Take sum of squares
     for (i=0; i < sample_count; i++) {
         sum_sq_A += pow(data[i].v_phA, 2);
         sum_sq_B += pow(data[i].v_phB, 2);
         sum_sq_C += pow(data[i].v_phC, 2);
     }
 
+    // Take root of mean
     analysis->rms[0] = sqrt(sum_sq_A/(double)sample_count);
     analysis->rms[1] = sqrt(sum_sq_B/(double)sample_count);
     analysis->rms[2] = sqrt(sum_sq_C/(double)sample_count);
 }
 
-// TODO: Add data validation
 void compute_p2p(WaveformAnalysis_t *analysis) {
 
     int i = 0;
@@ -37,6 +38,7 @@ void compute_p2p(WaveformAnalysis_t *analysis) {
     double min_B = DBL_MAX, max_B = -DBL_MAX;
     double min_C = DBL_MAX, max_C = -DBL_MAX;
 
+    // Get max and min voltages for each phase
     for (i = 0; i < sample_count; i++) {
         if (data[i].v_phA < min_A) min_A = data[i].v_phA;
         if (data[i].v_phA > max_A) max_A = data[i].v_phA;
@@ -50,13 +52,18 @@ void compute_p2p(WaveformAnalysis_t *analysis) {
         analysis->p2p[2] = max_C - min_C;
 }
 
-// TODO: add validation to avoid dividing by zero
-// TODO: handle floating-point rounding
-void compute_dc_offset(WaveformAnalysis_t *analysis) {
+int compute_dc_offset(WaveformAnalysis_t *analysis) {
+
+    // Validate sample count != 0
+    if (sample_count == 0) {
+        printf("Sample count reads zero. Unable to compute DC offset.");
+        return 1;
+    }
 
     int i = 0;
     double sum_A = 0, sum_B = 0, sum_C = 0;
 
+    // Sum voltages for each phase
     for (i = 0; i < sample_count; i++) {
         sum_A += data[i].v_phA;
         sum_B += data[i].v_phB;
@@ -66,11 +73,19 @@ void compute_dc_offset(WaveformAnalysis_t *analysis) {
     analysis->mean[0] = sum_A/(double)sample_count;
     analysis->mean[1] = sum_B/(double)sample_count;
     analysis->mean[2] = sum_C/(double)sample_count;
+
+    // Eliminate floating-point rounding errors causing signed 0 values
+    if (fabs(analysis->mean[0]) < 1e-12) analysis->mean[0] = 0.0;
+    if (fabs(analysis->mean[1]) < 1e-12) analysis->mean[1] = 0.0;
+    if (fabs(analysis->mean[2]) < 1e-12) analysis->mean[2] = 0.0;
+
+    return 0;
 }
 
 void detect_clipping() {
     int i = 0;
 
+    // Flag samples with values that are above pre-defined limits
     for (i = 0; i < sample_count; i++) {
         if (fabs(data[i].v_phA) > CLIP_LIMIT){
             data[i].health_flags |= CLIP_A;}
@@ -83,6 +98,7 @@ void detect_clipping() {
 
 void check_rms_tolerance(WaveformAnalysis_t *analysis, int index) {
 
+    // Check RMS values against predefined tolerance thresholds
     if (analysis->rms[index] > TOL_LIMIT_UPPER) {
         analysis->tolerance_status[index] = 1; // Above tolerance threshold
     }
@@ -99,6 +115,7 @@ void compute_range(WaveformAnalysis_t *analysis, const MetricType metric) {
     for (i = 0; i < sample_count; i++) {
         double field_value = 0;
 
+        // Read initial value based on given metric
         switch (metric) {
             case TIME: field_value = data[i].time; break;
             case LINE_CURRENT: field_value = data[i].line_current; break;
@@ -108,9 +125,11 @@ void compute_range(WaveformAnalysis_t *analysis, const MetricType metric) {
             default: printf("Error specifying metric type for range analysis.");
         }
 
+        // Determine min and max values
         if (field_value < min_value) min_value = field_value;
         if (field_value > max_value) max_value = field_value;
     }
+
     switch (metric) {
         case TIME: {
             analysis->range_time[0] = min_value;
@@ -139,6 +158,18 @@ void compute_range(WaveformAnalysis_t *analysis, const MetricType metric) {
         } break;
         default: printf("Error computing range for metric %d.", metric);
     }
+}
+
+void compute_mean_freq(WaveformAnalysis_t *analysis) {
+
+    int i = 0;
+    double sum_freq = 0;
+    for (i = 0; i < sample_count; i++) {
+        sum_freq += data[i].frequency;
+    }
+
+    analysis->mean_freq = sum_freq/(double)sample_count;
+
 }
 
 void compute_variance_std_dev(WaveformAnalysis_t *analysis) {
@@ -177,6 +208,7 @@ SortedData_t* allocate_sort_memory() {
 
     SortedData_t* sorted_data = malloc(sizeof(SortedData_t));
 
+    // Validate pointer before memory allocation
     if (!sorted_data) {
         printf("Memory allocation failed for sorted_data.\n");
         return NULL;
@@ -186,6 +218,7 @@ SortedData_t* allocate_sort_memory() {
     sorted_data->phB = malloc(sample_count * sizeof(WaveformSample_t));
     sorted_data->phC = malloc(sample_count * sizeof(WaveformSample_t));
 
+    // Check if memory allocation failed for any phase
     if (!sorted_data->phA || !sorted_data->phB || !sorted_data->phC) {
         free(sorted_data->phA);
         free(sorted_data->phB);
@@ -200,18 +233,28 @@ SortedData_t* allocate_sort_memory() {
     return sorted_data;
 }
 
-void sort_samples(SortedData_t* sorted_data) {
+int sort_samples(SortedData_t* sorted_data) {
 
+    // Check if sorted_data or any of its arrays are NULL
     if (!sorted_data || !sorted_data->phA || !sorted_data->phB || !sorted_data->phC) {
         printf("Error: sorted_data or its arrays are NULL.\n");
-        return;
+        return 1;
     }
 
+    // Check if sample_count is zero
+    if (sample_count == 0) {
+        printf("Sample count is zero. Unable to sort data.");
+        return 1;
+    }
+
+    // Copy data to sorting arrays
     memcpy(sorted_data->phA, data, sample_count * sizeof(WaveformSample_t));
     memcpy(sorted_data->phB, data, sample_count * sizeof(WaveformSample_t));
     memcpy(sorted_data->phC, data, sample_count * sizeof(WaveformSample_t));
 
     for (int i = 1; i < sample_count; i++) {
+
+        // Store current element (voltage) for each phase
         WaveformSample_t temp_phA = sorted_data->phA[i];
         WaveformSample_t temp_phB = sorted_data->phB[i];
         WaveformSample_t temp_phC = sorted_data->phC[i];
@@ -239,4 +282,7 @@ void sort_samples(SortedData_t* sorted_data) {
         sorted_data->phC[C + 1] = temp_phC;
 
     }
+
+    return 0;
+
 }

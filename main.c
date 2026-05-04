@@ -3,7 +3,6 @@
 
 int main(void) {
 
-    // TODO: Validate successful function of load_data before continuing program run
     int status = load_data();
     verify_input_status(status);
 
@@ -13,6 +12,7 @@ int main(void) {
     compute_p2p(&analysis);
     compute_dc_offset(&analysis);
     detect_clipping();
+    compute_mean_freq(&analysis);
     compute_variance_std_dev(&analysis);
 
     check_rms_tolerance(&analysis, 0);
@@ -26,11 +26,9 @@ int main(void) {
     compute_range(&analysis, THD_PERCENT);
 
     SortedData_t *sorted_data = allocate_sort_memory();
-    sort_samples(sorted_data);
 
     file_output(&analysis);
-    output_sort(*sorted_data);
-
+    output_sort(sorted_data);
     free_data();
 
     return 0;

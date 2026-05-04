@@ -10,5 +10,6 @@ int load_data();
 void free_data();
 int verify_input_status(int status);
 int file_output(const WaveformAnalysis_t *analysis);
-int output_sort(SortedData_t sorted_data);
+int output_sort(SortedData_t *sorted_data);
+void print_dc_offset(WaveformAnalysis_t *analysis);
 #endif //PQ_ANALYSER_IO_H

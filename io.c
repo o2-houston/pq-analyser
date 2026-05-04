@@ -42,10 +42,13 @@ int load_data(void) {
 
         if (data == NULL) {
             printf("Memory allocation failed.\n");
-            status = 2;
+            status = 2; // Memory allocation failure
             goto cleanup;
         }
-    } else data = NULL;
+    } else {
+        data = NULL;
+        goto cleanup;
+    }
 
     count = 0;
 
@@ -69,8 +72,8 @@ int load_data(void) {
             break;
         }
         else {
-            printf("Malformed data at line %zu.\n", count + 2);
-            break;
+            printf("Error: Malformed data at line %zu. Expected line does not contain 8 values.\n", count + 2);
+            return 4; // Malformed data
         }
     }
 
@@ -79,6 +82,22 @@ int load_data(void) {
     if (count == 0) {
         printf("No valid samples found.\n");
         status =  5; // Parsing failure
+    }
+
+    int all_zeros = 1; // assume true
+    for (size_t i = 0; i < sample_count; i++) {
+        WaveformSample_t *s = &data[i];
+        if (s->time != 0.0 || s->v_phA != 0.0 || s->v_phB != 0.0 || s->v_phC != 0.0 ||
+            s->line_current != 0.0 || s->frequency != 0.0 || s->power_factor != 0.0 ||
+            s->thd_percent != 0.0) {
+            all_zeros = 0; // Found a non-zero sample
+            break;
+            }
+    }
+
+    if (all_zeros) {
+        printf("Error: CSV contains all zeros. Nothing to process.\n");
+        status = 6;  // Zero data CSV file
     }
 
     cleanup:
@@ -93,8 +112,11 @@ int load_data(void) {
 }
 
 void free_data(void) {
-    free(data);  // Free dynamically allocated memory
-    data = NULL;
+    // Ensure free() is only called when data != NULL
+    if (data != NULL) {
+        free(data);
+        data = NULL;
+    }
 }
 
 int verify_input_status(int status) {
@@ -132,6 +154,8 @@ int file_output(const WaveformAnalysis_t *analysis) {
     fprintf(fp, "\nDC offset for A: %lfV", analysis->mean[0]);
     fprintf(fp, "\nDC offset for B: %lfV", analysis->mean[1]);
     fprintf(fp, "\nDC offset for C: %lfV\n", analysis->mean[2]);
+
+    fprintf(fp, "\nMean frequency: %lfHz\n", analysis->mean_freq);
 
     fprintf(fp, "\n====== VOLTAGE TOLERANCE STATUS ======\n");
 
@@ -239,41 +263,48 @@ int file_output(const WaveformAnalysis_t *analysis) {
     return 0;
 }
 
-int output_sort(SortedData_t sorted_data){
-
-    FILE *fpA = fopen("sort_phA.csv", "w");
-    FILE *fpB = fopen("sort_phB.csv", "w");
-    FILE *fpC = fopen("sort_phC.csv", "w");
-
-    fprintf(fpA, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
-    fprintf(fpB, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
-    fprintf(fpC, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
+int output_sort(SortedData_t *sorted_data) {
 
 
-    for (int i = 0; i < sample_count; i++) {
-        fprintf(fpA, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
-                sorted_data.phA[i].time, sorted_data.phA[i].v_phA, sorted_data.phA[i].v_phB, sorted_data.phA[i].v_phC,
-                sorted_data.phA[i].line_current, sorted_data.phA[i].frequency, sorted_data.phA[i].power_factor,
-                sorted_data.phA[i].thd_percent, sorted_data.phA[i].health_flags);
+        FILE *fpA = fopen("sort_phA.csv", "w");
+        FILE *fpB = fopen("sort_phB.csv", "w");
+        FILE *fpC = fopen("sort_phC.csv", "w");
 
-        fprintf(fpB, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
-                sorted_data.phB[i].time, sorted_data.phB[i].v_phA, sorted_data.phB[i].v_phB, sorted_data.phB[i].v_phC,
-                sorted_data.phB[i].line_current, sorted_data.phB[i].frequency, sorted_data.phB[i].power_factor,
-                sorted_data.phB[i].thd_percent, sorted_data.phB[i].health_flags);
-
-        fprintf(fpC, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
-                sorted_data.phC[i].time, sorted_data.phC[i].v_phA, sorted_data.phC[i].v_phB, sorted_data.phC[i].v_phC,
-                sorted_data.phC[i].line_current, sorted_data.phC[i].frequency, sorted_data.phC[i].power_factor,
-                sorted_data.phC[i].thd_percent, sorted_data.phC[i].health_flags);
+    if (fpA == NULL || fpB == NULL || fpC == NULL) {
+        printf("Error opening output file.\n");
+        return 1; // or another appropriate error code
     }
 
-    fclose(fpA);
-    fclose(fpB);
-    fclose(fpC);
+        fprintf(fpA, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
+        fprintf(fpB, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
+        fprintf(fpC, "time,v_phA,v_phB,v_phC,line_current,frequency,power_factor,thd_percent,health_flags\n");
 
-    free(sorted_data.phA);
-    free(sorted_data.phB);
-    free(sorted_data.phC);
 
-    return 0;
-}
+        for (int i = 0; i < sample_count; i++) {
+            fprintf(fpA, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
+                    sorted_data->phA[i].time, sorted_data->phA[i].v_phA, sorted_data->phA[i].v_phB, sorted_data->phA[i].v_phC,
+                    sorted_data->phA[i].line_current, sorted_data->phA[i].frequency, sorted_data->phA[i].power_factor,
+                    sorted_data->phA[i].thd_percent, sorted_data->phA[i].health_flags);
+
+            fprintf(fpB, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
+                    sorted_data->phB[i].time, sorted_data->phB[i].v_phA, sorted_data->phB[i].v_phB, sorted_data->phB[i].v_phC,
+                    sorted_data->phB[i].line_current, sorted_data->phB[i].frequency, sorted_data->phB[i].power_factor,
+                    sorted_data->phB[i].thd_percent, sorted_data->phB[i].health_flags);
+
+            fprintf(fpC, "%f,%f,%f,%f,%f,%f,%f,%f,%u\n",
+                    sorted_data->phC[i].time, sorted_data->phC[i].v_phA, sorted_data->phC[i].v_phB, sorted_data->phC[i].v_phC,
+                    sorted_data->phC[i].line_current, sorted_data->phC[i].frequency, sorted_data->phC[i].power_factor,
+                    sorted_data->phC[i].thd_percent, sorted_data->phC[i].health_flags);
+        }
+
+        fclose(fpA);
+        fclose(fpB);
+        fclose(fpC);
+
+        free(sorted_data->phA);
+        free(sorted_data->phB);
+        free(sorted_data->phC);
+        free(sorted_data);
+
+        return 0;
+    }
